@@ -1,0 +1,87 @@
+apply plugin: 'groovy'
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+version = '0.2-SNAPSHOT'
+group = 'com.github.prokod'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	compile gradleApi()
+	compile 'org.tmatesoft.svnkit:svnkit:1.8.3-1'
+	compile 'org.eclipse.jgit:org.eclipse.jgit:3.3.1.201403241930-r'
+}
+
+task javadocJar(type: Jar) {
+	classifier = 'javadoc'
+	from javadoc
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+	 classifier = 'sources'
+	 from sourceSets.main.allSource
+}
+
+artifacts {
+	 archives javadocJar
+	 archives sourcesJar
+}
+
+//Conditional Signing
+ext {
+	isReleaseVersion = !version.endsWith("SNAPSHOT")
+}
+
+signing {
+	required { isReleaseVersion  && gradle.taskGraph.hasTask("uploadArchives") }
+	sign configurations.archives
+}
+
+uploadArchives.repositories.mavenDeployer {
+	uniqueVersion = false
+
+	beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+	snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+		authentication(userName: ossrhUsername, password: ossrhPassword)
+	}
+
+	repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+		authentication(userName: ossrhUsername, password: ossrhPassword)
+	}
+
+	pom.project {
+		name 'Gradle (YA) Release plugin'
+		packaging 'jar'
+		description 'Yet another Gradle Release plugin.'
+		url 'http://github.com/prokod/gradle-yar-plugin'
+		inceptionYear '2015'
+
+		scm {
+			developerConnection 'git@github.com:prokod/gradle-yar-plugin.git'
+			connection 'git://github.com/prokod/gradle-yar-plugin.git'
+			url 'https://github.com/prokod/gradle-yar-plugin'
+		}
+
+		licenses {
+			license {
+				name 'The BSD 3-Clause License'
+				url 'http://opensource.org/licenses/BSD-3-Clause'
+			}
+		}
+		developers {
+			developer {
+				id 'noamasor'
+				name 'Noam Asor'
+				email 'asnosoft@gmail.com'
+			}
+		}
+	}
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.12'
+}
