@@ -16,7 +16,7 @@ Inspired by other Gradle release plugins out there already, This plugin is aimin
     }
 
     dependencies {
-      classpath 'com.github.prokod:gradle-yar-plugin:0.2'
+      classpath 'com.github.prokod:gradle-yar-plugin:0.2.1'
     }
   }
 
